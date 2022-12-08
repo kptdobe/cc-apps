@@ -62,6 +62,10 @@ const createMetadata = (document) => {
     meta.Languages = [...languages.children].map((l) => l.textContent).join(', ');
   }
 
+  const related = document.querySelectorAll('.pdp-platform-agnostic-layout-related-apps .tile-version-wrapper');
+  if (related.length > 0) {
+    meta.Related = [...related].map((r) => r.textContent).join(', ');
+  }
 
   const block = WebImporter.Blocks.getMetadataBlock(document, meta);
   document.body.append(block);
@@ -152,6 +156,7 @@ export default {
     WebImporter.DOMUtils.remove(document.body, [
       '.product-icon',
       '[role="dialog"]',
+      '.pdp-platform-agnostic-layout-related-apps',
     ]);
 
     return document.body;
