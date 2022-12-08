@@ -141,7 +141,7 @@ const tutorialCardsToBlock = (document) => {
 const additionalResourcesToBlock = (document) => {
   document.querySelectorAll('.pdp-platform-agnostic-layout-resources .resource-container').forEach((resources) => {
     const cells = [['Resources']];
-    resources.querySelectorAll('.resource-text').forEach((r) => {
+    resources.querySelectorAll('a.resource-link').forEach((r) => {
       const row = [r];
 
       cells.push(row);

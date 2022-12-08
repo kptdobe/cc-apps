@@ -21,6 +21,33 @@ const doImport = async (browser, url, output) => {
   await page.waitForTimeout(15000);
 
   await page.waitForSelector('.pdp-platform-agnostic-layout-resources', { timeout: 3000000 });
+
+  let more = false;
+  do {
+    const before = (await browser.pages()).length;
+    const link = await page.$('.resource-link:not(.already-clicked)');
+    if (link) {
+      await link.click();
+      await page.waitForTimeout(7000);
+      const pages = await browser.pages();
+      if (pages.length > before) {
+        const url = pages[pages.length - 1].url();
+        console.log('new page url', url);
+        pages[pages.length - 1].close();
+        await page.evaluate((u, l) => {
+          // const l = document.querySelector('.resource-link');
+          l.href = u;
+          l.classList.add('already-clicked');
+        }, url, link);
+        more = await page.evaluate(() => document.querySelector('.resource-link:not(.already-clicked)') !== null);
+      } else {
+        more = false;
+      }
+    } else {
+      more = false;
+    }
+  } while (more);
+
   await page.click('[aria-label*="languages"]');
 
   const html = await page.evaluate(() => document.documentElement.outerHTML);
