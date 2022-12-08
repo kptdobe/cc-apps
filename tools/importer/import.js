@@ -57,6 +57,12 @@ const createMetadata = (document) => {
     meta.Icon = icon.getAttribute('alt') || '';
   }
 
+  const languages = document.querySelector('.languages-tab-content');
+  if (languages) {
+    meta.Languages = [...languages.children].map((l) => l.textContent).join(', ');
+  }
+
+
   const block = WebImporter.Blocks.getMetadataBlock(document, meta);
   document.body.append(block);
 }
@@ -144,7 +150,8 @@ export default {
     makeProxySrcs(document.body, ' https://odin.adobe.com');
 
     WebImporter.DOMUtils.remove(document.body, [
-      '.product-icon'
+      '.product-icon',
+      '[role="dialog"]',
     ]);
 
     return document.body;
