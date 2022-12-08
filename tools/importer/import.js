@@ -106,6 +106,38 @@ const verticalTabListToBlock = (document) => {
   });
 }
 
+const tutorialCardsToBlock = (document) => {
+  document.querySelectorAll('.tutorial-cards').forEach((cards) => {
+    const cells = [['Tutorial Cards']];
+    cards.querySelectorAll('.tutorial-card').forEach((card) => {
+      const row = [card];
+
+      const title = card.querySelector('.tutorial-card-title');
+      if (title) {
+        const h3 = document.createElement('h3');
+        h3.textContent = title.textContent;
+        title.replaceWith(h3);
+      }
+
+      const details = card.querySelector('.tutorial-card-details');
+      if (details) {
+        const p = document.createElement('p');
+        p.innerHTML = details.textContent.split('.').join('<br>');
+        details.replaceWith(p);
+      }
+
+      const img = card.querySelector('.tutorial-card-image');
+      if (img) {
+        row.push(img);
+      }
+
+      cells.push(row);
+    });
+    const table = WebImporter.DOMUtils.createTable(cells, document);
+    cards.replaceWith(table);
+  });
+}
+
 export default {
   /**
    * Apply DOM operations to the provided document and return
@@ -143,6 +175,7 @@ export default {
     }
 
     verticalTabListToBlock(document);
+    tutorialCardsToBlock(document);
 
     createMetadata(document);
 
