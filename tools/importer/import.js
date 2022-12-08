@@ -138,6 +138,19 @@ const tutorialCardsToBlock = (document) => {
   });
 }
 
+const additionalResourcesToBlock = (document) => {
+  document.querySelectorAll('.pdp-platform-agnostic-layout-resources .resource-container').forEach((resources) => {
+    const cells = [['Resources']];
+    resources.querySelectorAll('.resource-text').forEach((r) => {
+      const row = [r];
+
+      cells.push(row);
+    });
+    const table = WebImporter.DOMUtils.createTable(cells, document);
+    resources.replaceWith(table);
+  });
+}
+
 export default {
   /**
    * Apply DOM operations to the provided document and return
@@ -162,6 +175,9 @@ export default {
       '.action-bar',
       '.slider',
       '.view-more',
+      '.adbMsgClientWrapper',
+      'iframe',
+      '#loader',
     ]);
 
     toHeading2(['h1', '.title', '.ccdHeader__item'], document);
@@ -176,6 +192,7 @@ export default {
 
     verticalTabListToBlock(document);
     tutorialCardsToBlock(document);
+    additionalResourcesToBlock(document);
 
     createMetadata(document);
 
