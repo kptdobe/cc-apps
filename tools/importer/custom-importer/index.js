@@ -1,26 +1,42 @@
 import puppeteer from 'puppeteer';
 import { promises as fs } from 'fs';
 
-(async () => {
-  const browser = await puppeteer.launch({
-    headless: false,
-    userDataDir: './user_data',
-  });
+const input = [{
+  url: 'https://creativecloud.adobe.com/apps/all/desktop/pdp/creative-cloud',
+  output: './output/creative-cloud.html',
+}, {
+  url: 'https://creativecloud.adobe.com/apps/all/desktop/pdp/photoshop',
+  output: './output/photoshop.html',
+}, {
+  url: 'https://creativecloud.adobe.com/apps/all/desktop/pdp/photoshop-mobile',
+  output: './output/photoshop-mobile.html',
+}, {
+  url: 'https://creativecloud.adobe.com/apps/all/desktop/pdp/photoshop-web',
+  output: './output/photoshop-web.html',
+}];
+
+const doImport = async (browser, url, output) => {
   const page = await browser.newPage();
-
-  await page.goto('https://creativecloud.adobe.com/apps/all/desktop/pdp/creative-cloud', { timeout: 3000000 });
-  // await page.goto('https://creativecloud.adobe.com/apps/all/desktop/pdp/photoshop', { timeout: 3000000 });
-
-  await page.waitForTimeout(10000);
+  await page.goto(url, { timeout: 3000000 });
+  await page.waitForTimeout(15000);
 
   await page.waitForSelector('.pdp-platform-agnostic-layout-resources', { timeout: 3000000 });
   await page.click('[aria-label*="languages"]');
 
   const html = await page.evaluate(() => document.documentElement.outerHTML);
-  console.log('html', html);
+  await fs.writeFile(output, html);
+} 
 
-  await fs.writeFile('./output/creative-cloud.html', html);
-  // await fs.writeFile('./output/photoshop.html', html);
+(async () => {
+  const browser = await puppeteer.launch({
+    headless: false,
+    userDataDir: './user_data',
+  });
+
+  // input.forEach(async (o) => {
+  //   await doImport(browser, o.url, o.output);
+  // });
+  await doImport(browser, input[2].url, input[2].output);
   
   // await browser.close();
 })();
