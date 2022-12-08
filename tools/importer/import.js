@@ -29,6 +29,47 @@ const makeProxySrcs = (main, host) => {
   });
 };
 
+const createMetadata = (document) => {
+  const meta = {};
+
+  const title = document.querySelector('title');
+  if (title) {
+    meta.Title = title.innerHTML.replace(/[\n\t]/gm, '');
+  }
+
+  // find the <meta property="og:description"> element
+  const desc = document.querySelector('[property="og:description"]');
+  if (desc) {
+    meta.Description = desc.content;
+  }
+
+  // find the <meta property="og:image"> element
+  const img = document.querySelector('[property="og:image"]');
+  if (img) {
+    // create an <img> element
+    const el = document.createElement('img');
+    el.src = img.content;
+    meta.Image = el;
+  }
+  
+  const icon = document.querySelector('.product-icon');
+  if (icon) {
+    meta.Icon = icon.getAttribute('alt') || '';
+  }
+
+  const block = WebImporter.Blocks.getMetadataBlock(document, meta);
+  document.body.append(block);
+}
+
+const toHeading2 = (selectors, document) => {
+  document.querySelectorAll(selectors).forEach((e) => {
+    const h2 = document.createElement('h2');
+    h2.textContent = e.textContent;
+    e.replaceWith(h2);
+  })
+
+}
+
 export default {
   /**
    * Apply DOM operations to the provided document and return
@@ -43,7 +84,6 @@ export default {
     // eslint-disable-next-line no-unused-vars
     document, url, html, params,
   }) => {
-    // use helper method to remove header, footer, etc.
     WebImporter.DOMUtils.remove(document.body, [
       '.navbar',
       '.leftnav-wrapper',
@@ -52,12 +92,15 @@ export default {
       '.platform-tabs',
       '.information',
       '.action-bar',
+      '.slider',
     ]);
 
     const bckimg = document.querySelectorAll('[style*="background-image"]');
     bckimg.forEach((e) => {
       WebImporter.DOMUtils.replaceBackgroundByImg(e, document);
     });
+
+    toHeading2(['h1', '.title'], document);
 
     // promote title to h1
     const name = document.querySelector('.product-name')
@@ -68,6 +111,12 @@ export default {
     }
 
     makeProxySrcs(document.body, ' https://odin.adobe.com');
+
+    createMetadata(document);
+
+    WebImporter.DOMUtils.remove(document.body, [
+      '.product-icon'
+    ]);
 
     return document.body;
   },
