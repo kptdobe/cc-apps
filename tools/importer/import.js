@@ -67,7 +67,33 @@ const toHeading2 = (selectors, document) => {
     h2.textContent = e.textContent;
     e.replaceWith(h2);
   })
+}
 
+const verticalTabListToBlock = (document) => {
+  document.querySelectorAll('.verticalTabList').forEach((verticalTabList) => {
+    const cells = [['Vertical Tab List']];
+    verticalTabList.querySelectorAll('.tab').forEach((tab) => {
+      const a = tab.querySelector('a');
+      if (a) {
+        const h3 = document.createElement('h3');
+        h3.textContent = a.textContent;
+        a.replaceWith(h3);
+      }
+      const div = document.createElement('div');
+      div.innerHTML = tab.innerHTML;
+      const row = [div];
+
+      const i = tab.getAttribute('data-index');
+      const preview = verticalTabList.querySelector(`.preview.p${i}`);
+      if (preview) {
+        row.push(preview);
+      }
+
+      cells.push(row);
+    });
+    const table = WebImporter.DOMUtils.createTable(cells, document);
+    verticalTabList.replaceWith(table);
+  });
 }
 
 export default {
@@ -87,20 +113,16 @@ export default {
     WebImporter.DOMUtils.remove(document.body, [
       '.navbar',
       '.leftnav-wrapper',
-      '.ccdHeader',
+      '.pdp-header',
       '#footer',
       '.platform-tabs',
       '.information',
       '.action-bar',
       '.slider',
+      '.view-more',
     ]);
 
-    const bckimg = document.querySelectorAll('[style*="background-image"]');
-    bckimg.forEach((e) => {
-      WebImporter.DOMUtils.replaceBackgroundByImg(e, document);
-    });
-
-    toHeading2(['h1', '.title'], document);
+    toHeading2(['h1', '.title', '.ccdHeader__item'], document);
 
     // promote title to h1
     const name = document.querySelector('.product-name')
@@ -110,9 +132,16 @@ export default {
       name.replaceWith(h1);
     }
 
-    makeProxySrcs(document.body, ' https://odin.adobe.com');
+    verticalTabListToBlock(document);
 
     createMetadata(document);
+
+    const bckimg = document.querySelectorAll('[style*="background-image"]');
+    bckimg.forEach((e) => {
+      WebImporter.DOMUtils.replaceBackgroundByImg(e, document);
+    });
+
+    makeProxySrcs(document.body, ' https://odin.adobe.com');
 
     WebImporter.DOMUtils.remove(document.body, [
       '.product-icon'
