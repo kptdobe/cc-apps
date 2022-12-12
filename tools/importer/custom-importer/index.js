@@ -1,21 +1,22 @@
 import puppeteer from 'puppeteer';
 import { promises as fs } from 'fs';
 
-const input = [{
-  url: 'https://creativecloud.adobe.com/apps/all/desktop/pdp/creative-cloud',
-  output: './output/creative-cloud.html',
-}, {
-  url: 'https://creativecloud.adobe.com/apps/all/desktop/pdp/photoshop',
-  output: './output/photoshop.html',
-}, {
-  url: 'https://creativecloud.adobe.com/apps/all/desktop/pdp/photoshop-mobile',
-  output: './output/photoshop-mobile.html',
-}, {
-  url: 'https://creativecloud.adobe.com/apps/all/desktop/pdp/photoshop-web',
-  output: './output/photoshop-web.html',
-}];
+import urls from './urls.json' assert {type: 'json'};
 
-const captureClicks = async (page, selector, browser) => {
+// const urls = [
+//   'https://creativecloud.adobe.com/apps/all/desktop/pdp/creative-cloud',
+//   'https://creativecloud.adobe.com/apps/all/desktop/pdp/photoshop',
+//   'https://creativecloud.adobe.com/apps/all/desktop/pdp/photoshop-mobile',
+//   'https://creativecloud.adobe.com/apps/all/desktop/pdp/photoshop-web',
+// ];
+
+async function asyncForEach(array, callback) {
+  for (let index = 0; index < array.length; index += 1) {
+    await callback(array[index], index, array);
+  }
+}
+
+const captureClicks = async (page, selector, browser, cb, parent) => {
   let more = false;
   do {
     const before = (await browser.pages()).length;
@@ -24,22 +25,57 @@ const captureClicks = async (page, selector, browser) => {
     if (link) {
       await link.click();
       await page.waitForTimeout(7000);
-      const pages = await browser.pages();
-      if (pages.length > before) {
-        const url = pages[pages.length - 1].url();
-        console.log('new page url', url);
-        pages[pages.length - 1].close();
-        await page.evaluate((u, l) => {
-          if (l.tagName === 'A') {
-            l.setAttribute('href', u);
-          } else {
-            l.setAttribute('data-href', u);
-          }
+
+      const popupLinks = await page.evaluate(() => document.querySelector(`.resource-more-link:not(.already-clicked,.already-detected)`) !== null);
+
+      if (popupLinks) {
+        await page.evaluate(() => {
+          document.querySelectorAll('.resource-more-link').forEach((l) => {
+            l.classList.add('already-detected');
+          });
+        });
+        await page.evaluate((l) => {
           l.classList.add('already-clicked');
-        }, url, link);
+          l.classList.add('parent-menu');
+        }, link);
+        await captureClicks(page, 'resource-more-link', browser, async (processLinked, url, subp) => {
+          await page.evaluate((rml, p, url) => {
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.textContent = rml.textContent;
+            p.parentNode.append(a);
+            rml.classList.add('already-clicked');
+          }, processLinked, subp, url);
+          await page.waitForTimeout(1000);
+        }, link);
+        await page.evaluate((l) => {
+          const h3 = document.createElement('h3');
+          h3.textContent = l.textContent;
+          l.replaceWith(h3);
+        }, link);
         more = await page.evaluate((s) => document.querySelector(`.${s}:not(.already-clicked)`) !== null, selector);
       } else {
-        more = false;
+        const pages = await browser.pages();
+        if (pages.length > before) {
+          const url = pages[pages.length - 1].url();
+          console.log('new page url', url);
+          pages[pages.length - 1].close();
+          if (cb) {
+            await cb(link, url, parent);
+          } else {
+            await page.evaluate((u, l) => {
+              if (l.tagName === 'A') {
+                l.setAttribute('href', u);
+              } else {
+                l.setAttribute('data-href', u);
+              }
+              l.classList.add('already-clicked');
+            }, url, link);
+          }
+          more = await page.evaluate((s) => document.querySelector(`.${s}:not(.already-clicked)`) !== null, selector);
+        } else {
+          more = false;
+        }
       }
     } else {
       more = false;
@@ -75,10 +111,12 @@ const doImport = async (browser, url, output) => {
     userDataDir: './user_data',
   });
 
-  // input.forEach(async (o) => {
-  //   await doImport(browser, o.url, o.output);
-  // });
-  await doImport(browser, input[2].url, input[2].output);
+  const input = urls.map((u) => ({ url: u, output: `./output/${u.split('/').pop()}.html` }));
+
+  await asyncForEach(input, async (o) => {
+    await doImport(browser, o.url, o.output);
+  });
+  // await doImport(browser, input[2].url, input[2].output);
   
   await browser.close();
 })();

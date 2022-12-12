@@ -149,8 +149,21 @@ const tutorialCardsToBlock = (document) => {
 const additionalResourcesToBlock = (document) => {
   document.querySelectorAll('.pdp-platform-agnostic-layout-resources .resource-container').forEach((resources) => {
     const cells = [['Resources']];
-    resources.querySelectorAll('a.resource-link').forEach((r) => {
+    resources.querySelectorAll('.resource-well').forEach((r) => {
       const row = [r];
+
+      const links = r.querySelectorAll('a');
+      
+      if (links.length > 1) {
+        const ul = document.createElement('ul');
+        links.forEach((a) => {
+          const li = document.createElement('li');
+          li.append(a);
+          ul.append(li);
+        });
+        r.append(ul);
+      }
+
 
       cells.push(row);
     });
@@ -211,6 +224,7 @@ export default {
       '.adbMsgClientWrapper',
       'iframe',
       '#loader',
+      '.spectrum-Popover',
     ]);
 
     toHeading2(['h1', '.title', '.ccdHeader__item'], document);
@@ -241,6 +255,7 @@ export default {
       '.product-icon',
       '[role="dialog"]',
       '.pdp-platform-agnostic-layout-related-apps',
+      '.hidden',
     ]);
 
     return document.body;
