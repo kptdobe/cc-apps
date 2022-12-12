@@ -112,6 +112,14 @@ const tutorialCardsToBlock = (document) => {
     cards.querySelectorAll('.tutorial-card').forEach((card) => {
       const row = [card];
 
+      const href = card.getAttribute('data-href');
+      if (href) {
+        const a = document.createElement('a');
+        a.href = href;
+        a.textContent = href;
+        card.append(a);
+      }
+
       const title = card.querySelector('.tutorial-card-title');
       if (title) {
         const h3 = document.createElement('h3');
@@ -148,6 +156,31 @@ const additionalResourcesToBlock = (document) => {
     });
     const table = WebImporter.DOMUtils.createTable(cells, document);
     resources.replaceWith(table);
+  });
+}
+
+const cleanupLinks = (document) => {
+  document.querySelectorAll('a').forEach((a) => { 
+    const href = a.getAttribute('href');
+    if (href) {
+      try {
+        const u = new URL(href);
+        u.searchParams.delete('mv');
+        u.searchParams.delete('guid');
+        u.searchParams.delete('context_guid');
+        u.searchParams.delete('promoid');
+        u.searchParams.delete('x-product');
+        u.searchParams.delete('x-product-location');
+        u.searchParams.delete('trackingid');
+        const newHref = u.toString();
+        a.setAttribute('href', newHref);
+        if (a.textContent === href) {
+          a.textContent = newHref;
+        }
+      } catch(e) {
+        console.log('Invalid link', href);
+      }
+    }
   });
 }
 
@@ -202,6 +235,7 @@ export default {
     });
 
     makeProxySrcs(document.body, ' https://odin.adobe.com');
+    cleanupLinks(document);
 
     WebImporter.DOMUtils.remove(document.body, [
       '.product-icon',
