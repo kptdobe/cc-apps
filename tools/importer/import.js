@@ -57,6 +57,11 @@ const createMetadata = (document) => {
     meta.Icon = icon.getAttribute('alt') || '';
   }
 
+  const compat = document.querySelector('a[aria-label*="compatibility"]');
+  if (compat) {
+    meta.Compatibility = compat.textContent;
+  }
+
   const languages = document.querySelector('.languages-tab-content');
   if (languages) {
     meta.Languages = [...languages.children].map((l) => l.textContent).join(', ');
@@ -217,7 +222,6 @@ export default {
       '.pdp-header',
       '#footer',
       '.platform-tabs',
-      '.information',
       '.action-bar',
       '.slider',
       '.view-more',
@@ -256,6 +260,7 @@ export default {
       '[role="dialog"]',
       '.pdp-platform-agnostic-layout-related-apps',
       '.hidden',
+      '.information',
     ]);
 
     return document.body;
